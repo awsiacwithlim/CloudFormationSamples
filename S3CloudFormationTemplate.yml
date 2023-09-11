@@ -1,0 +1,49 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: "This is a S3 CFn Template"
+
+Parameters:
+  BucketName:
+    Type: String
+    MinLength: 1
+
+  VersioningConfiguration:
+    Type: String
+    AllowedValues:
+      - Enabled 
+      - Suspended
+  WritableRoleName:
+    Type: String
+    MinLength: 1
+Resources:
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties: 
+      BucketEncryption: 
+        ServerSideEncryptionConfiguration: 
+          - ServerSideEncryptionByDefault: 
+              SSEAlgorithm: AES256 
+      BucketName: !Ref BucketName
+      PublicAccessBlockConfiguration: 
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration: 
+          Status: !Ref VersioningConfiguration
+
+  S3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties: 
+      Bucket: !Ref S3Bucket
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action:
+              - 'S3:PutObject'
+            Effect: Allow
+            Resource: !Sub arn:aws:s3:::${S3Bucket}/*
+            Principal: 
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:role/${WritableRoleName}
+
+
